@@ -66,7 +66,7 @@ def get_writer(engine_name):
         raise ValueError("No Excel writer '%s'" % engine_name)
 
 
-def read_excel(io, sheetname=0, **kwds):
+def read_excel(io, sheet_name=0, **kwds):
     """Read an Excel table into a pandas DataFrame
 
     Parameters
@@ -75,18 +75,18 @@ def read_excel(io, sheetname=0, **kwds):
         The string could be a URL. Valid URL schemes include http, ftp, s3,
         and file. For file URLs, a host is expected. For instance, a local
         file could be file://localhost/path/to/workbook.xlsx
-    sheetname : string, int, mixed list of strings/ints, or None, default 0
-        
-        Strings are used for sheet names, Integers are used in zero-indexed sheet 
-        positions. 
-        
+    sheet_name : string, int, mixed list of strings/ints, or None, default 0
+
+        Strings are used for sheet names, Integers are used in zero-indexed sheet
+        positions.
+
         Lists of strings/integers are used to request multiple sheets.
-        
+
         Specify None to get all sheets.
-        
+
         str|int -> DataFrame is returned.
         list|None -> Dict of DataFrames is returned, with keys representing sheets.
-               
+
         Available Cases
 
         * Defaults to 0 -> 1st sheet as a DataFrame
@@ -148,7 +148,7 @@ def read_excel(io, sheetname=0, **kwds):
 
     engine = kwds.pop('engine', None)
 
-    return ExcelFile(io, engine=engine).parse(sheetname=sheetname, **kwds)
+    return ExcelFile(io, engine=engine).parse(sheetname=sheet_name, **kwds)
 
 
 class ExcelFile(object):
@@ -205,19 +205,19 @@ class ExcelFile(object):
         Parameters
         ----------
         sheetname : string, int, mixed list of strings/ints, or None, default 0
-            
-            Strings are used for sheet names, Integers are used in zero-indexed sheet 
-            positions. 
-            
+
+            Strings are used for sheet names, Integers are used in zero-indexed sheet
+            positions.
+
             Lists of strings/integers are used to request multiple sheets.
-            
+
             Specify None to get all sheets.
-            
+
             str|int -> DataFrame is returned.
             list|None -> Dict of DataFrames is returned, with keys representing sheets.
-                   
+
             Available Cases
-    
+
             * Defaults to 0 -> 1st sheet as a DataFrame
             * 1 -> 2nd sheet as a DataFrame
             * "Sheet1" -> 1st sheet as a DataFrame
@@ -334,7 +334,7 @@ class ExcelFile(object):
         def _parse_cell(cell_contents,cell_typ):
             """converts the contents of the cell into a pandas
                appropriate object"""
-               
+
             if cell_typ == XL_CELL_DATE:
                 if xlrd_0_9_3:
                     # Use the newer xlrd datetime handling.
@@ -377,9 +377,9 @@ class ExcelFile(object):
             xlrd_0_9_3 = True
         else:
             xlrd_0_9_3 = False
-        
+
         ret_dict = False
-        
+
         #Keep sheetname to maintain backwards compatibility.
         if isinstance(sheetname, list):
             sheets = sheetname
@@ -389,38 +389,38 @@ class ExcelFile(object):
             ret_dict = True
         else:
             sheets = [sheetname]
-        
+
         #handle same-type duplicates.
         sheets = list(set(sheets))
-        
+
         output = {}
-        
+
         for asheetname in sheets:
             if verbose:
                 print("Reading sheet %s" % asheetname)
-            
+
             if isinstance(asheetname, compat.string_types):
                 sheet = self.book.sheet_by_name(asheetname)
-            else:  # assume an integer if not a string    
-                sheet = self.book.sheet_by_index(asheetname)   
-            
+            else:  # assume an integer if not a string
+                sheet = self.book.sheet_by_index(asheetname)
+
             data = []
             should_parse = {}
-            
+
             for i in range(sheet.nrows):
                 row = []
                 for j, (value, typ) in enumerate(zip(sheet.row_values(i),
                                                      sheet.row_types(i))):
                     if parse_cols is not None and j not in should_parse:
                         should_parse[j] = self._should_parse(j, parse_cols)
-    
+
                     if parse_cols is None or should_parse[j]:
                         row.append(_parse_cell(value,typ))
                 data.append(row)
-    
+
             if header is not None:
                 data[header] = _trim_excel_header(data[header])
-    
+
             parser = TextParser(data, header=header, index_col=index_col,
                                 has_index_names=has_index_names,
                                 na_values=na_values,
@@ -431,14 +431,14 @@ class ExcelFile(object):
                                 skip_footer=skip_footer,
                                 chunksize=chunksize,
                                 **kwds)
-            
+
             output[asheetname] = parser.read()
-            
+
         if ret_dict:
             return output
         else:
             return output[asheetname]
-        
+
 
     @property
     def sheet_names(self):
